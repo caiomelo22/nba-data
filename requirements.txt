@@ -1,4 +1,5 @@
 mysql-connector-python==8.1.0
+nba-api==1.1.11
 numpy==1.25.1
 python-dotenv==1.0.0
 pandas==2.0.3

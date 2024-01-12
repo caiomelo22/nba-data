@@ -9,13 +9,11 @@ class ScrapperService(BetExplorerScrapperService):
         self,
         start_season,
         end_season,
-        be_stage,
         nba_seasons
     ):
         # Call the constructors of parent classes explicitly
         BetExplorerScrapperService.__init__(
             self,
-            be_stage,
             start_season,
             end_season,
         )
@@ -43,7 +41,7 @@ class ScrapperService(BetExplorerScrapperService):
             self.nba_seasons["away_odds"] = None
 
             for i, row in self.nba_seasons.iterrows():
-                print(f"{season}/{self.end_season-1} : {i}/{len(self.nba_seasons)}")
+                print(f"{season}/{self.end_season} : {i}/{len(self.nba_seasons)}")
 
                 try:
                     plus_one_day = odds_df["date"] + timedelta(days=1)

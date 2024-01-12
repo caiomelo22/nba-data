@@ -1,10 +1,9 @@
 import undetected_chromedriver as uc
 
 class DriverMixin:
-    def __init__(self, start_season, end_season, single_year_season):
+    def __init__(self, start_season, end_season):
         self.start_season = start_season
         self.end_season = end_season
-        self.single_year_season = single_year_season
         self.driver = None
 
     def start_driver(self):

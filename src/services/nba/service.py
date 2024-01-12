@@ -4,9 +4,9 @@ from functools import reduce
 import pandas as pd
 
 class NBAService():
-    def __init__(self, first_season, last_season):
-        self.first_season = first_season
-        self.last_season = last_season
+    def __init__(self, start_season, end_season):
+        self.start_season = start_season
+        self.end_season = end_season
 
         self.season_games = []
         self.player_season_games = []
@@ -34,14 +34,14 @@ class NBAService():
         return players_season_games
     
     def get_seasons_info(self):
-        for season in range(self.first_season,self.last_season+1):
+        for season in range(self.start_season,self.end_season+1):
             season_games = self.get_season_games(season)
             player_season_games = self.get_player_season_games(season)
             
             self.season_games.append(season_games)
             self.player_season_games.append(player_season_games)
 
-            print("{}/{}".format(season, self.last_season))
+            print("{}/{}".format(season, self.end_season))
 
     def clean_seasons_info(self):
         self.season_games = reduce(lambda  left,right: pd.merge(left,right, how='outer'), self.season_games)

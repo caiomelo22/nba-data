@@ -18,7 +18,7 @@ class BetExplorerScrapperService(DriverMixin):
         return dt.strptime(date, "%d.%m.%Y")
     
     def scrape_season(self, season, stage):
-        season = []
+        season_games = []
 
         url = f"https://www.betexplorer.com/basketball/usa/nba-{season}-{season+1}/results/"
         self.driver.get(url)
@@ -41,7 +41,7 @@ class BetExplorerScrapperService(DriverMixin):
 
         total_games = 0
         for i, r in enumerate(rows):
-            print(f"{season}/{self.end_season-1} {i}/{len(rows)}")
+            print(f"{season}/{self.end_season} {i}/{len(rows)}")
             if not r.text:
                 continue
             tds = r.find_elements(By.XPATH, ".//child::td")
@@ -72,22 +72,31 @@ class BetExplorerScrapperService(DriverMixin):
                     int(away_score),
                     float(away_odds),
                 ]
-                stage.append(match_info)
+                season_games.append(match_info)
                 total_games += 1
             except Exception as e:
                 continue
 
-        return season
+        return season_games
 
 
     def bet_explorer_scrapper(self):
         self.bet_explorer_seasons = dict()
 
-        for season in range(self.start_season, self.end_season):
+        for season in range(self.start_season, self.end_season + 1):
             regular_season = self.scrape_season(season, 'Main')
             playoffs = self.scrape_season(season, 'Play Offs')
             promotion_playoffs = self.scrape_season(season, 'Promotion - Play Offs')
 
-            complete_season_games = regular_season + playoffs + promotion_playoffs
+            complete_season_games = []
+
+            if regular_season:
+                complete_season_games.extend(regular_season)
+            
+            if playoffs:
+                complete_season_games.extend(playoffs)
+            
+            if promotion_playoffs:
+                complete_season_games.extend(promotion_playoffs)
 
             self.bet_explorer_seasons[season] = complete_season_games
