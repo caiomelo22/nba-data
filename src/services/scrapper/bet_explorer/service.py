@@ -45,7 +45,7 @@ class BetExplorerScrapperService(DriverMixin):
             if not r.text:
                 continue
             tds = r.find_elements(By.XPATH, ".//child::td")
-            if len(tds) < 6:
+            if len(tds) < 5:
                 continue
             matchup, score, home_odds, away_odds, date = [
                 t.text for t in tds
