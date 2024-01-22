@@ -16,13 +16,7 @@ class BetExplorerScrapperService(DriverMixin):
         )
 
     def transform_odds_date(self, date):
-        if date == "Yesterday":
-            # Calculate yesterday's date using timedelta
-            yesterday = dt.now() - timedelta(days=1)
-            return yesterday
-        else:
-            # Parse the date input assuming it's a string in the format 'YYYY-MM-DD'
-            return dt.strptime(date, "%d.%m.%Y")
+        return dt.strptime(date, "%d.%m.%Y")
     
     def scrape_season(self, season, stage):
         season_games = []
@@ -67,11 +61,17 @@ class BetExplorerScrapperService(DriverMixin):
                     continue
                 home_team, away_team = matchup.split(" - ")
 
-                if not date.split(".")[-1]:
-                    date += str(dt.now().year)
+                if date == "Yesterday":
+                    date = dt.now() - timedelta(days=1)
+                    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+                else:
+                    if not date.split(".")[-1]:
+                        date += str(dt.now().year)
+
+                    date = self.transform_odds_date(date)
 
                 match_info = [
-                    self.transform_odds_date(date),
+                    date,
                     home_team,
                     int(home_score),
                     float(home_odds),
@@ -117,3 +117,4 @@ class BetExplorerScrapperService(DriverMixin):
             ]
             
             self.bet_explorer_seasons[season] = pd.DataFrame(complete_season_games, columns=columns)
+

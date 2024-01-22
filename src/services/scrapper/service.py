@@ -31,22 +31,21 @@ class ScrapperService(BetExplorerScrapperService):
         self.nba_seasons["away_odds"] = None
 
         for i, row in self.nba_seasons.iterrows():
-            print(f"{season}/{self.end_season} : {i}/{len(self.nba_seasons)}")
 
             if row['season'] != season:
                 season = row['season']
                 odds_df = self.bet_explorer_seasons[season]
 
-            try:
-                plus_one_day = odds_df["date"] + timedelta(days=1)
-                minus_one_day = odds_df["date"] - timedelta(days=1)
+            print(f"{season}/{self.end_season} : {i}/{len(self.nba_seasons)}")
 
-                print(f"\nrow_date({row['date']}) odds_date({odds_df['date']}) -1({minus_one_day}) +1({plus_one_day})")
+            try:
+                plus_one_day = row["date"] + timedelta(days=1)
+                minus_one_day = row["date"] - timedelta(days=1)
 
                 same_date_matches = odds_df[
-                    (odds_df["date"] == row["date"])
-                    | (minus_one_day == row["date"])
-                    | (plus_one_day == row["date"])
+                    (row["date"] == odds_df["date"])
+                    | (minus_one_day == odds_df["date"])
+                    | (plus_one_day == odds_df["date"])
                 ].reset_index(drop=True)
 
                 same_date_matches["matchup_score"] = same_date_matches.apply(
@@ -60,8 +59,6 @@ class ScrapperService(BetExplorerScrapperService):
                     by="matchup_score", ascending=False
                 ).reset_index(drop=True)
                 match = same_date_matches.iloc[0]
-
-                print(row["home_team"], row["away_team"], '\n', match)
 
                 self.nba_seasons.at[i, "home_odds"] = match["home_odds"]
                 self.nba_seasons.at[i, "away_odds"] = match["away_odds"]
