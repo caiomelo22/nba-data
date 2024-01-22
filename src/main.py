@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # General info
-start_season = 2022
-end_season = 2022
+start_season = 2023
+end_season = 2023
 
 nba_service = NBAService(start_season=start_season, end_season=end_season)
 
@@ -27,14 +27,11 @@ scrapper_service.close_driver()
 
 scrapper_service.match_seasons_data()
 
-print(scrapper_service.nba_seasons.head())
+mysql_service = MySQLService()
 
-# mysql_service = MySQLService()
-# first_season = next(iter(scrapper_service.fbref_seasons))
-# mysql_service.create_table_from_df("matches", scrapper_service.fbref_seasons[first_season])
-
-# for season in scrapper_service.fbref_seasons:
-#     data_list = scrapper_service.fbref_seasons[season].to_dict(orient="records")
-#     mysql_service.insert_multiple_rows("matches", data_list)
+mysql_service.insert_from_df("teams", nba_service.teams)
+mysql_service.insert_from_df("players", nba_service.players)
+mysql_service.insert_from_df("games", scrapper_service.nba_seasons)
+mysql_service.insert_from_df("player_games", nba_service.player_season_games)
     
-# mysql_service.close()
+mysql_service.close()

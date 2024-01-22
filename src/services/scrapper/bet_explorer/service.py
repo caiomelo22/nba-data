@@ -1,4 +1,5 @@
-from datetime import datetime as dt
+import pandas as pd
+from datetime import datetime as dt, timedelta
 from selenium.webdriver.common.by import By
 
 from ..mixins import DriverMixin
@@ -15,7 +16,13 @@ class BetExplorerScrapperService(DriverMixin):
         )
 
     def transform_odds_date(self, date):
-        return dt.strptime(date, "%d.%m.%Y")
+        if date == "Yesterday":
+            # Calculate yesterday's date using timedelta
+            yesterday = dt.now() - timedelta(days=1)
+            return yesterday
+        else:
+            # Parse the date input assuming it's a string in the format 'YYYY-MM-DD'
+            return dt.strptime(date, "%d.%m.%Y")
     
     def scrape_season(self, season, stage):
         season_games = []
@@ -99,4 +106,14 @@ class BetExplorerScrapperService(DriverMixin):
             if promotion_playoffs:
                 complete_season_games.extend(promotion_playoffs)
 
-            self.bet_explorer_seasons[season] = complete_season_games
+            columns = [
+                "date",
+                "home_team",
+                "home_score",
+                "home_odds",
+                "away_team",
+                "away_score",
+                "away_odds",
+            ]
+            
+            self.bet_explorer_seasons[season] = pd.DataFrame(complete_season_games, columns=columns)

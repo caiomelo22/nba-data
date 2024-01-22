@@ -83,6 +83,11 @@ class MySQLService:
             print(f"Error inserting multiple rows: {e}")
             self.conn.rollback()
 
+    def insert_from_df(self, table, df):
+        self.create_table_from_df(table, df)
+        data_list = df.to_dict(orient="records")
+        self.insert_multiple_rows(table, data_list)
+
     def close(self):
         if self.conn and self.conn.is_connected():
             self.cursor.close()
