@@ -52,6 +52,10 @@ class MySQLService:
             # Iterate over DataFrame columns to determine data types for table creation
             for col, dtype in df.dtypes.items():
                 col_type = type_mapping.get(str(dtype), "VARCHAR(255)")
+
+                if col == "id":
+                    col_type += " PRIMARY KEY"
+                    
                 columns.append(f"{col} {col_type}")
 
             # Create the table
