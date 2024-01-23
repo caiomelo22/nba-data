@@ -27,7 +27,7 @@ class NBAService():
         regular_season_games = leaguegamelog.LeagueGameLog(season = str(season), player_or_team_abbreviation = 'P', season_type_all_star='Regular Season').get_data_frames()[0]
         regular_season_games['IS_PLAYOFFS'] = False
 
-        playoffs_games = leaguegamelog.LeagueGameLog(season = str(season), player_or_team_abbreviation = 'P', season_type_all_star='Regular Season').get_data_frames()[0]
+        playoffs_games = leaguegamelog.LeagueGameLog(season = str(season), player_or_team_abbreviation = 'P', season_type_all_star='Playoffs').get_data_frames()[0]
         playoffs_games['IS_PLAYOFFS'] = True
 
         players_season_games = reduce(lambda left,right: pd.merge(left,right, how='outer'), [regular_season_games, playoffs_games])
