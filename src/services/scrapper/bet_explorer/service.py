@@ -61,7 +61,10 @@ class BetExplorerScrapperService(DriverMixin):
                     continue
                 home_team, away_team = matchup.split(" - ")
 
-                if date == "Yesterday":
+                if date == "Today":
+                    date = dt.now()
+                    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+                elif date == "Yesterday":
                     date = dt.now() - timedelta(days=1)
                     date = date.replace(hour=0, minute=0, second=0, microsecond=0)
                 else:
