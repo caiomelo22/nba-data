@@ -43,9 +43,9 @@ class ScrapperService(BetExplorerScrapperService):
                 minus_one_day = row["date"] - timedelta(days=1)
 
                 same_date_matches = odds_df[
-                    (row["date"] == odds_df["date"])
-                    | (minus_one_day == odds_df["date"])
-                    | (plus_one_day == odds_df["date"])
+                    (odds_df["date"] == row["date"])
+                    | (odds_df["date"] == minus_one_day)
+                    | (odds_df["date"] == plus_one_day)
                 ].reset_index(drop=True)
 
                 same_date_matches["matchup_score"] = same_date_matches.apply(
@@ -63,5 +63,6 @@ class ScrapperService(BetExplorerScrapperService):
                 self.nba_seasons.at[i, "home_odds"] = match["home_odds"]
                 self.nba_seasons.at[i, "away_odds"] = match["away_odds"]
 
-            except:
+            except Exception as e:
+                print('Match Data Exception', e)
                 continue
