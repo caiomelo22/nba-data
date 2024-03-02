@@ -43,11 +43,14 @@ class BetExplorerScrapperService(DriverMixin):
         total_games = 0
         for i, r in enumerate(rows):
             print(f"{season}/{self.end_season} {i}/{len(rows)}")
+            
             if not r.text:
                 continue
+            
             tds = r.find_elements(By.XPATH, ".//child::td")
             if len(tds) < 5:
                 continue
+
             matchup, score, home_odds, away_odds, date = [
                 t.text for t in tds
             ]
@@ -63,28 +66,30 @@ class BetExplorerScrapperService(DriverMixin):
 
                 if date == "Today":
                     date = dt.now()
-                    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+                    date = date.replace(hour=0, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d')
                 elif date == "Yesterday":
                     date = dt.now() - timedelta(days=1)
-                    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+                    date = date.replace(hour=0, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d')
                 else:
                     if not date.split(".")[-1]:
                         date += str(dt.now().year)
 
                     date = self.transform_odds_date(date)
-
+                
                 match_info = [
                     date,
                     home_team,
                     int(home_score),
                     float(home_odds),
                     away_team,
-                    int(away_score),
+                    int(away_score.replace(' ET', '')),
                     float(away_odds),
                 ]
                 season_games.append(match_info)
                 total_games += 1
+                
             except Exception as e:
+                print('BetExplorer Scrapper Exception', e)
                 continue
 
         return season_games
@@ -120,4 +125,6 @@ class BetExplorerScrapperService(DriverMixin):
             ]
             
             self.bet_explorer_seasons[season] = pd.DataFrame(complete_season_games, columns=columns)
+
+            self.bet_explorer_seasons[season]["date"] = pd.to_datetime(self.bet_explorer_seasons[season]["date"])
 
