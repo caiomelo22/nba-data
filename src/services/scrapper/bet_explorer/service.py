@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime as dt, timedelta
 from selenium.webdriver.common.by import By
+from tqdm import tqdm
 
 from ..mixins import DriverMixin
 
@@ -40,9 +41,8 @@ class BetExplorerScrapperService(DriverMixin):
         )
         rows = table.find_elements(By.XPATH, ".//tbody/tr")
 
-        total_games = 0
-        for i, r in enumerate(rows):
-            print(f"{season}/{self.end_season} {i}/{len(rows)}")
+        for i in tqdm(range(len(rows)), desc=f"Scrapping seasons odds data for {season} - {stage}"):
+            r = rows[i]
             
             if not r.text:
                 continue
@@ -86,7 +86,6 @@ class BetExplorerScrapperService(DriverMixin):
                     float(away_odds),
                 ]
                 season_games.append(match_info)
-                total_games += 1
                 
             except Exception as e:
                 print('BetExplorer Scrapper Exception', e)

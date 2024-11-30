@@ -3,6 +3,7 @@ from nba_api.stats.static import teams
 from functools import reduce
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 class NBAService():
     def __init__(self, start_season, end_season):
@@ -35,14 +36,13 @@ class NBAService():
         return players_season_games
     
     def get_seasons_info(self):
-        for season in range(self.start_season,self.end_season+1):
+        print("Getting seasons info")
+        for season in tqdm(range(self.start_season,self.end_season+1)):
             season_games = self.get_season_games(season)
             player_season_games = self.get_player_season_games(season)
-            
+
             self.season_games.append(season_games)
             self.player_season_games.append(player_season_games)
-
-            print("{}/{}".format(season, self.end_season))
 
     def get_teams(self):
         self.teams = []
@@ -151,10 +151,10 @@ class NBAService():
         return player_game_info
 
     def clean_seasons_info(self):
-        self.season_games = reduce(lambda  left,right: pd.merge(left,right, how='outer'), self.season_games)
-        self.player_season_games = reduce(lambda  left,right: pd.merge(left,right, how='outer'), self.player_season_games)
+        self.season_games = reduce(lambda left, right: pd.merge(left, right, how='outer'), self.season_games)
+        self.player_season_games = reduce(lambda left, right: pd.merge(left, right, how='outer'), self.player_season_games)
         
-        self.season_games.dropna(subset=['FG_PCT','FT_PCT','FG3_PCT'], inplace=True)
+        self.season_games.dropna(subset=['FG_PCT', 'FT_PCT', 'FG3_PCT'], inplace=True)
 
         self.season_games['GAME_ID'] = pd.to_numeric(self.season_games['GAME_ID'])
         self.player_season_games['GAME_ID'] = pd.to_numeric(self.player_season_games['GAME_ID'])
@@ -168,25 +168,29 @@ class NBAService():
         player_season_games_cleaned = []
         self.players = []
 
-        for i, g in self.season_games.groupby(self.season_games.index // 2):
-            print("{}/{}".format(i, len(self.season_games.index) // 2))
-            if g.iloc[[0],:].iloc[0]['WL'] == None:
-                break
-                
-            if '@' in g.iloc[[0],:].iloc[0]['MATCHUP']:
-                away_game = g.iloc[0,:]
-                home_game = g.iloc[1,:]
-                winner = 'H' if g.iloc[1,:]['WL'] == 'W' else 'A'
+        # Iterate through the DataFrame two rows at a time
+        for i in tqdm(range(0, len(self.season_games), 2), desc="Processing season games"):
+            if i + 1 >= len(self.season_games):
+                break  # Prevent out-of-bounds access for the last iteration
+
+            game1 = self.season_games.iloc[i]
+            game2 = self.season_games.iloc[i + 1]
+
+            # Determine home and away games based on 'MATCHUP'
+            if '@' in game1['MATCHUP']:
+                away_game = game1
+                home_game = game2
+                winner = 'H' if game2['WL'] == 'W' else 'A'
             else:
-                home_game = g.iloc[0,:]
-                away_game = g.iloc[1,:]
-                winner = 'H' if g.iloc[0,:]['WL'] == 'W' else 'A'
-            
+                home_game = game1
+                away_game = game2
+                winner = 'H' if game1['WL'] == 'W' else 'A'
+
             game_players = self.player_season_games.loc[self.player_season_games['GAME_ID'] == home_game['GAME_ID']]
             game_players = game_players.replace({np.nan: 0})
             
             season_games_cleaned.append(self.get_match_object(home_game, away_game, winner))
-    
+
             for _, player in game_players.iterrows():
                 self.players.append(self.get_player_object(player['PLAYER_ID'], player['PLAYER_NAME'].replace("'", "")))
                 player_season_games_cleaned.append(self.get_player_game_object(player))

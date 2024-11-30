@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # General info
-start_season = 2023
-end_season = 2023
+start_season = 2024
+end_season = 2024
 
 nba_service = NBAService(start_season=start_season, end_season=end_season)
 

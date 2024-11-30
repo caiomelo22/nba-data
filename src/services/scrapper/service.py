@@ -1,5 +1,6 @@
 from datetime import timedelta
 import pandas as pd
+from tqdm import tqdm
 from .bet_explorer import BetExplorerScrapperService
 from thefuzz import fuzz
 
@@ -30,13 +31,11 @@ class ScrapperService(BetExplorerScrapperService):
         self.nba_seasons["home_odds"] = None
         self.nba_seasons["away_odds"] = None
 
-        for i, row in self.nba_seasons.iterrows():
-
+        for i in tqdm(range(len(self.nba_seasons)), desc="Matching seasons data"):
+            row = self.nba_seasons.iloc[i]
             if row['season'] != season:
                 season = row['season']
                 odds_df = self.bet_explorer_seasons[season]
-
-            print(f"{season}/{self.end_season} : {i}/{len(self.nba_seasons)}")
 
             try:
                 plus_one_day = row["date"] + timedelta(days=1)
