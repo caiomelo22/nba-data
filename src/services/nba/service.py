@@ -151,53 +151,60 @@ class NBAService():
         return player_game_info
 
     def clean_seasons_info(self):
+        # Merge season games and player season games
         self.season_games = reduce(lambda left, right: pd.merge(left, right, how='outer'), self.season_games)
         self.player_season_games = reduce(lambda left, right: pd.merge(left, right, how='outer'), self.player_season_games)
-        
+
+        # Clean up missing data
         self.season_games.dropna(subset=['FG_PCT', 'FT_PCT', 'FG3_PCT'], inplace=True)
 
+        # Convert columns to appropriate data types
         self.season_games['GAME_ID'] = pd.to_numeric(self.season_games['GAME_ID'])
         self.player_season_games['GAME_ID'] = pd.to_numeric(self.player_season_games['GAME_ID'])
 
         self.season_games['GAME_DATE'] = pd.to_datetime(self.season_games['GAME_DATE'])
         self.player_season_games['GAME_DATE'] = pd.to_datetime(self.player_season_games['GAME_DATE'])
 
+        # Sort the season games by date and game ID
         self.season_games = self.season_games.sort_values(['GAME_DATE', 'GAME_ID'], ascending=[True, True]).reset_index(drop=True)
 
         season_games_cleaned = []
         player_season_games_cleaned = []
         self.players = []
 
-        # Iterate through the DataFrame two rows at a time
-        for i in tqdm(range(0, len(self.season_games), 2), desc="Processing season games"):
-            if i + 1 >= len(self.season_games):
-                break  # Prevent out-of-bounds access for the last iteration
+        # Group by GAME_ID to process each game
+        for game_id, game_group in tqdm(self.season_games.groupby('GAME_ID'), desc="Processing season games"):
+            # Ensure the group contains exactly two rows (home and away)
+            if len(game_group) != 2:
+                continue
 
-            game1 = self.season_games.iloc[i]
-            game2 = self.season_games.iloc[i + 1]
-
-            # Determine home and away games based on 'MATCHUP'
-            if '@' in game1['MATCHUP']:
-                away_game = game1
-                home_game = game2
-                winner = 'H' if game2['WL'] == 'W' else 'A'
+            # Extract home and away rows based on 'MATCHUP'
+            if '@' in game_group.iloc[0]['MATCHUP']:
+                away_game = game_group.iloc[0]
+                home_game = game_group.iloc[1]
+                winner = 'H' if home_game['WL'] == 'W' else 'A'
             else:
-                home_game = game1
-                away_game = game2
-                winner = 'H' if game1['WL'] == 'W' else 'A'
+                home_game = game_group.iloc[0]
+                away_game = game_group.iloc[1]
+                winner = 'H' if home_game['WL'] == 'W' else 'A'
 
-            game_players = self.player_season_games.loc[self.player_season_games['GAME_ID'] == home_game['GAME_ID']]
+            # Get players for the current game
+            game_players = self.player_season_games.loc[self.player_season_games['GAME_ID'] == game_id]
             game_players = game_players.replace({np.nan: 0})
-            
+
+            # Append cleaned game data
             season_games_cleaned.append(self.get_match_object(home_game, away_game, winner))
 
+            # Process and append player data
             for _, player in game_players.iterrows():
                 self.players.append(self.get_player_object(player['PLAYER_ID'], player['PLAYER_NAME'].replace("'", "")))
                 player_season_games_cleaned.append(self.get_player_game_object(player))
 
+        # Convert lists to DataFrames
         self.players = pd.DataFrame(self.players)
         self.season_games = pd.DataFrame(season_games_cleaned)
         self.player_season_games = pd.DataFrame(player_season_games_cleaned)
+
 
     def run_nba_pipeline(self):
 
